@@ -1,0 +1,39 @@
+Pats <- searchTwitter('patriots', geocode='42.375,-71.1061111,10mi')
+
+
+Patslat=sapply(Pats, function(x) as.numeric(x$getLatitude()))
+Patslat=sapply(Patslat, function(z) ifelse(length(z)==0,NA,z))  
+
+Patslon=sapply(Pats, function(x) as.numeric(x$getLongitude()))
+Patslon=sapply(Patslon, function(z) ifelse(length(z)==0,NA,z))  
+
+Patsdate=lapply(Pats, function(x) x$getCreated())
+Patsdate=sapply(Patsdate,function(x) strftime(x, format="%Y-%m-%d %H:%M:%S",tz = "UTC"))
+
+Patstext=sapply(Pats, function(x) x$getText())
+Patstext=unlist(Patstext)
+
+isretweet=sapply(Pats, function(x) x$getIsRetweet())
+retweeted=sapply(Pats, function(x) x$getRetweeted())
+retweetcount=sapply(Pats, function(x) x$getRetweetCount())
+
+favoritecount=sapply(Pats, function(x) x$getFavoriteCount())
+favorited=sapply(Pats, function(x) x$getFavorited())
+
+Patsdata=as.data.frame(cbind(tweet=Patstext,date=Patsdate,lat=Patslat,lon=Patslon,
+                         isretweet=isretweet,retweeted=retweeted, retweetcount=retweetcount,
+                         favoritecount=favoritecount,favorited=favorited))
+
+#Exclude tweets that do not have lat/lon on
+
+Patsdata=filter(Patsdata, !is.na(lat),!is.na(lon))
+lonlat=select(Patsdata,lon,lat)
+
+#Get full address of each tweet
+
+Patsresult <- do.call(rbind, lapply(1:nrow(lonlat),function(i) revgeocode(as.numeric(lonlat[i,1:2]))))
+
+newdata <- cbind(Patsdata, Patsresult)
+
+a <- revgeocode(lonlat$lat, lonlat$lon, ics = 'WGS-84', api = 'google',
+           output = 'address')
