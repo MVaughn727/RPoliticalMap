@@ -1,0 +1,268 @@
+# load packages
+library(twitteR)
+library(ROAuth)
+require(RCurl)
+library(stringr)
+library(tm)
+library(ggmap)
+library(dplyr)
+library(plyr)
+library(tm)
+library(streamR)
+library(wordcloud)
+library(rbokeh)
+library(ggplot2)
+library(grid)
+library (rjson)
+library (RJSONIO)
+library(jsonlite)
+Library(HTTR)
+
+# sets WD to my dropbox
+setwd("/Users/Name/Dropbox/Foldername")
+
+# ROauth
+api_key = "xxxxx" 
+api_secret = "xxxxxxxx" 
+access_token = "xxxxxxxxxxxxx" 
+access_token_secret = "xxxxxxxxxxxxxxxxxxxxxx" 
+
+setup_twitter_oauth(api_key,api_secret,access_token, access_token_secret)
+
+# Sentiment Analysis
+# Download Negative and Positive Words List
+#https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html
+Pos = scan('/Users/name/Documents/positive-words.txt', what='character', comment.char=';')
+Neg = scan('/Users/name/Documents/negative-words.txt', what='character', comment.char=';')
+
+# insert own negwords
+NegWords = c(Neg, 'wtf', 'drumpf', 'shillary', 'cuck')
+
+# Create Sentiment Test
+# https://jeffreybreen.wordpress.com/tag/sentiment-analysis/
+
+  score.sentiment = function(sentences, Pos, NegWords, .progress='none')
+  {
+    require(plyr)
+    require(stringr)
+    
+    # we got a vector of sentences. plyr will handle a list
+    # or a vector as an "l" for us
+    # we want a simple array ("a") of scores back, so we use 
+    # "l" + "a" + "ply" = "laply":
+    scores = laply(sentences, function(sentence, Pos, NegWords) {
+      
+      # clean up sentences with R's regex-driven global substitute, gsub():
+      sentence = gsub('[[:punct:]]', '', sentence)
+      sentence = gsub('[[:cntrl:]]', '', sentence)
+      sentence = gsub('\\d+', '', sentence)
+      # and convert to lower case:
+      sentence = tolower(sentence)
+      
+      # split into words. str_split is in the stringr package
+      word.list = str_split(sentence, '\\s+')
+      # sometimes a list() is one level of hierarchy too much
+      words = unlist(word.list)
+      
+      # compare our words to the dictionaries of positive & negative terms
+      pos.matches = match(words, Pos)
+      neg.matches = match(words, NegWords)
+      
+      # match() returns the position of the matched term or NA
+      # we just want a TRUE/FALSE:
+      pos.matches = !is.na(pos.matches)
+      neg.matches = !is.na(neg.matches)
+      
+      # and conveniently enough, TRUE/FALSE will be treated as 1/0 by sum():
+      score = sum(pos.matches) - sum(neg.matches)
+      
+      return(score)
+    }, Pos, NegWords, .progress=.progress )
+    
+    scores.df = data.frame(score=scores, text=sentences)
+    return(scores.df)
+  }
+
+
+# Repeat each search 5 times while filtering data and applying sentiment score
+z <- 0
+repeat{
+  # stream for hillary tweets across USA (SW coordinates to NE)
+  filterStream("Hillary_tweetsUS.json", track = "Hil", locations = c(-125, 25, -66, 50), timeout = 120, 
+               oauth = my_oauth)
+  
+  # set dataframe to read the json file
+  tweets.df <- parseTweets("Hillary_tweetsUS.json", verbose = FALSE)
+  
+  # get rid of tweets not mentioning Hillary
+  text.Hill.tweets <- tweets.df[ grep("Hil", tweets.df$text), ]
+  
+  # get rid of tweets that don't have a location value
+  text.latlon.Hill.tweets <- filter(text.Hill.tweets, !is.na(place_lat),!is.na(place_lon))
+  
+  # clean text and create new column, tweet
+  tweet=text.latlon.Hill.tweets$text
+  tweet_list=lapply(tweet, function(x) iconv(x, "latin1", "ASCII", sub=""))
+  tweet_list=lapply(tweet_list, function(x) gsub("htt.*",' ',x))
+  tweet=unlist(tweet_list)
+  text.latlon.Hill.tweets$tweet <- tweet
+  
+  # apply sentiment score and add it to datafile
+  result <-  score.sentiment(text.latlon.Hill.tweets$tweet, Pos,
+                             NegWords, .progress='text')
+  text.latlon.Hill.tweets$score <- result$score
+  
+  # rename it to Hill_final since its easier on the eyes
+  Hill_final <- text.latlon.Hill.tweets
+  
+  # split into positive, neutral and negative datafiles
+  library(dplyr)
+  positive.Hill <- filter(Hill_final, score > 0)
+  neutral.Hill <- filter(Hill_final, score > -1 & score < 1)
+  negative.Hill <- filter(Hill_final, score < 0)
+  
+  # assign characters for sentiment, not really necessary but good to have in case you wanted seperate data frames
+  positive.Hill$graph <- "pos"
+  neutral.Hill$graph <- "neu"
+  negative.Hill$graph <- "neg"
+  
+  # recombine data frames
+  Hill.graph <- rbind(positive.Hill, neutral.Hill, negative.Hill)
+  
+  # graph score distribution and take table of sentiment scores
+  a <- table(Hill.graph$graph)
+  barplot(a)
+  
+  # make new data frame with essential information. We want to keep text and tweet as it is easier to read 'tweet' but 'text' is richer
+  keeps <- c("text", "tweet", "screen_name", "place_lat", "place_lon", "score", "graph")
+  JS <- Hill.graph[keeps]
+  
+  # write .json of important data for possible future live feed
+  expjsn <- toJSON(JS)
+  write(expjsn, "test.json")
+  
+  # write .csv since it's easier to manipulate
+  write.csv(JS, file = "Hill_Tweets.csv")
+  
+  # stream for Bernie tweets across USA (SW coordinates to NE)
+  filterStream("Bernie_tweetsUS.json", track = "Bern", locations = c(-125, 25, -66, 50), timeout = 120, 
+               oauth = my_oauth)
+  
+  # set dataframe to read the json file
+  tweets.df <- parseTweets("Bernie_tweetsUS.json", verbose = FALSE)
+  
+  # get rid of tweets not mentioning Bernie
+  text.Bernie.tweets <- tweets.df[ grep("Bern", tweets.df$text), ]
+  
+  # get rid of tweets that don't have a location value
+  text.latlon.Bernie.tweets <- filter(text.Bernie.tweets, !is.na(place_lat),!is.na(place_lon))
+  
+  # clean text and create new column, tweet
+  tweet=text.latlon.Bernie.tweets$text
+  tweet_list=lapply(tweet, function(x) iconv(x, "latin1", "ASCII", sub=""))
+  tweet_list=lapply(tweet_list, function(x) gsub("htt.*",' ',x))
+  tweet=unlist(tweet_list)
+  text.latlon.Bernie.tweets$tweet <- tweet
+  
+  # apply sentiment score and add it to datafile
+  result <-  score.sentiment(text.latlon.Bernie.tweets$tweet, Pos,
+                             NegWords, .progress='text')
+  text.latlon.Bernie.tweets$score <- result$score
+  
+  # rename it to Bernie_final since its easier on the eyes
+  Bernie_final <- text.latlon.Bernie.tweets
+  
+  # split into positive, neutral and negative data files
+  library(dplyr)
+  positive.Bernie <- filter(Bernie_final, score > 0)
+  neutral.Bernie <- filter(Bernie_final, score > -1 & score < 1)
+  negative.Bernie <- filter(Bernie_final, score < 0)
+  
+  # assign characters for sentiment
+  positive.Bernie$graph <- "pos"
+  neutral.Bernie$graph <- "neu"
+  negative.Bernie$graph <- "neg"
+  
+  # recombine data frames
+  Bernie.graph <- rbind(positive.Bernie, neutral.Bernie, negative.Bernie)
+  
+  # graph score distribution
+  a <- table(Bernie.graph$graph)
+  barplot(a)
+  
+  # make new data frame with essential information
+  keeps <- c("text", "tweet", "screen_name", "place_lat", "place_lon", "score", "graph")
+  JS_B <- Bernie.graph[keeps]
+  
+  # short for .json_Bernie
+  expjsn_B <- toJSON(JS_B)
+  write(expjsn, "Bernie.json")
+  
+  # get .csv of important tweet info
+  write.csv(JS_B, file = "Bernie_Tweets.csv")
+  
+  # stream for Trump tweets across USA (SW coordinates to NE)
+  filterStream("Trump_tweetsUS.json", track = "Trump", locations = c(-125, 25, -66, 50), timeout = 120, 
+               oauth = my_oauth)
+  
+  # set dataframe to read the json file
+  tweets.df <- parseTweets("Trump_tweetsUS.json", verbose = FALSE)
+  
+  # get rid of tweets not mentioning Trump
+  text.Trump.tweets <- tweets.df[ grep("Trump", tweets.df$text), ]
+  
+  # get rid of tweets that don't have a location value
+  text.latlon.Trump.tweets <- filter(text.Trump.tweets, !is.na(place_lat),!is.na(place_lon))
+  
+  # clean text and create new column, tweet
+  tweet=text.latlon.Trump.tweets$text
+  tweet_list=lapply(tweet, function(x) iconv(x, "latin1", "ASCII", sub=""))
+  tweet_list=lapply(tweet_list, function(x) gsub("htt.*",' ',x))
+  tweet=unlist(tweet_list)
+  text.latlon.Trump.tweets$tweet <- tweet
+  
+  # apply sentiment score and add it to datafile
+  result <-  score.sentiment(text.latlon.Trump.tweets$tweet, Pos,
+                             NegWords, .progress='text')
+  text.latlon.Trump.tweets$score <- result$score
+  
+  # rename it to Trump_final since its easier on the eyes
+  Trump_final <- text.latlon.Trump.tweets
+  
+  # split into positive, neutral and negative datafiles
+  library(dplyr)
+  positive.Trump <- filter(Trump_final, score > 0)
+  neutral.Trump <- filter(Trump_final, score > -1 & score < 1)
+  negative.Trump <- filter(Trump_final, score < 0)
+  
+  # assign characters for sentiment, not really necessary now
+  positive.Trump$graph <- "pos"
+  neutral.Trump$graph <- "neu"
+  negative.Trump$graph <- "neg"
+  
+  # recombine data frames
+  Trump.graph <- rbind(positive.Trump, neutral.Trump, negative.Trump)
+  
+  # graph score distribution
+  a <- table(Trump.graph$graph)
+  barplot(a)
+  
+  # keep what you want in a sleeker file
+  keeps <- c("text", "tweet", "screen_name", "place_lat", "place_lon", "score", "graph")
+  JS_T <- Trump.graph[keeps]
+  
+  # create .json_Trump
+  expjsn_T <- toJSON(JS_T)
+  write(expjsn, "Trump.json")
+  
+  # easier with the csv
+  write.csv(JS_T, file = "Trump_Tweets.csv")
+  
+  # after 5 rounds for each candidate the loop breaks
+  # if timeout is kept at 120 it should take ~30-35 min for cycle to end (factoring in some processing time)
+  z <- z + 1
+  print(z)
+  if(z > 4) break() 
+  
+}
+
