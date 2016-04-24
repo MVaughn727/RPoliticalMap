@@ -259,7 +259,8 @@ repeat{
   write.csv(JS_T, file = "Trump_Tweets.csv")
   
   # after 5 rounds for each candidate the loop breaks
-  # if timeout is kept at 120 it should take ~30-35 min for cycle to end (factoring in some processing time)
+  # if timeout is kept at 120 it will take much, much longer than the expected ~30-35 min for cycle to end
+  # especially if your laptop is like mine!
   z <- z + 1
   print(z)
   if(z > 4) break() 
