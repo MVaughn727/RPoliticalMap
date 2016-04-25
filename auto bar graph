@@ -1,0 +1,44 @@
+# BAR GRAPH AUTOMATIC
+
+
+z <- 2
+repeat{
+  a <- read.csv("Hill_Tweets.csv")
+  b <- read.csv("Bernie_Tweets.csv")
+  c <- read.csv("Trump_Tweets.csv")
+  
+  drops <- c("HM_lat","HM_lon")
+  a <- a[ , !(names(a) %in% drops)]
+  
+  a$cand <- "Hillary"
+  b$cand <- "Bernie"
+  c$cand <- "Trump"
+  
+  a$final <- sum(a$score)
+  b$final <- sum(b$score)
+  c$final <- sum(c$score)
+  
+  
+  Cand.bar = data.frame(Names =
+                        factor(c(a$cand, b$cand, c$cand),
+                               levels = c(a$cand, b$cand, c$cand)),
+                      total = c( a$final, b$final, c$final))
+  
+  final.df <- unique(Cand.bar)
+  
+ barplot(final.df$total, names = final.df$Names, xlab = "Candidates", ylab = "total sentiment", main = "Total Sentiment Among Presidential Candidates Live", col = "blue")
+  
+  
+  testit <- function(x)
+  {
+    p1 <- proc.time()
+    Sys.sleep(x)
+    proc.time() - p1 # The cpu usage should be negligible
+  }
+  testit(5)
+  
+  z <- z - 1
+  print(z)
+  if(z > 2) break() 
+  
+}
