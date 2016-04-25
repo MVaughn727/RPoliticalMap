@@ -19,6 +19,15 @@ With our search terms each tweet or retweet we recieve initially has 43 variable
 
 At the heart of this project, standing alongside geolocation, was our interest in text sentiment analysis. In our project's development phase, we toyed with the idea of creating a detailed and comprehensive list of keywords that would be used to reliably measure and quantify our text's sentiment towards their presidential candidates, even taking into account sarcasm, nuance, and frequent mispelings. Thank God that [Bing Liu](https://en.wikipedia.org/wiki/Bing_Liu), a computer science professor at the University of Illinois at Chicago, along with his research assistant Minqing Hu, had already created one! Anyone interested in sentiment analysis or NLP should look into the [fascinating research](https://www.cs.uic.edu/~liub/FBS/SentimentAnalysis-and-OpinionMining.pdf) he has conducted along [with his colleagues](http://www.idiap.ch/~apbelis/hlt-course/positive-words.txt). 
 
+Our sentiment score function is similar to the one designed by [Jeffrey Breen](https://jeffreybreen.wordpress.com/tag/sentiment-analysis/) but with some additions as to include some key words used in the 2016 elections including 'Drumf' and 'Shillary.' The Twitter API also has a sort of 'built in' sentiment analysis where you  can filter for tweets that are happy, sad, or neutral. The developers over at PubNub have made a [great map](http://pubnub.github.io/tweet-emotion/) that takes a feed of tweets, determines if the sentiment is positive or negative, and then uses that information to determine the general happiness of the state. 
+
+#Data Visualization
+
+Our data visualization focuses around our three core values: the candidates, the sentiment score of the tweet, and the location of the tweet. 
+
+negative sentiment attributes and polarization. 
+
+#Future Research
 
 
 
