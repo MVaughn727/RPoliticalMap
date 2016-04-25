@@ -131,7 +131,7 @@ repeat{
   
   # graph score distribution and take table of sentiment scores
   a <- table(Hill.graph$graph)
-  barplot(a)
+  barplot(a, main="Hillary")
   
   # make new data frame with essential information. We want to keep text and tweet as it is easier to read 'tweet' but 'text' is richer
   keeps <- c("text", "tweet", "screen_name", "place_lat", "place_lon", "score", "graph")
@@ -188,7 +188,7 @@ repeat{
   
   # graph score distribution
   a <- table(Bernie.graph$graph)
-  barplot(a)
+  barplot(a, main="Bernie")
   
   # make new data frame with essential information
   keeps <- c("text", "tweet", "screen_name", "place_lat", "place_lon", "score", "graph")
@@ -245,7 +245,7 @@ repeat{
   
   # graph score distribution
   a <- table(Trump.graph$graph)
-  barplot(a)
+  barplot(a, main="Trump")
   
   # keep what you want in a sleeker file
   keeps <- c("text", "tweet", "screen_name", "place_lat", "place_lon", "score", "graph")
