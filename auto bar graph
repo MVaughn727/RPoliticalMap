@@ -1,4 +1,5 @@
 # BAR GRAPH AUTOMATIC
+# takes total sentiment and plots in a bar graph in near-real time
 
 
 z <- 2
