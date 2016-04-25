@@ -1,0 +1,45 @@
+# SCATTERPLOT AUTOMATIC
+
+library(rbokeh)
+
+drops <- c("HM_lat","HM_lon")
+a <- a[ , !(names(a) %in% drops)]
+
+
+
+
+z <- 2
+repeat{
+a <- read.csv("Hill_Tweets.csv")
+b <- read.csv("Bernie_Tweets.csv")
+c <- read.csv("Trump_Tweets.csv")
+
+a$cand <- "Hillary"
+b$cand <- "Bernie"
+c$cand <- "Trump"
+
+
+Live.df <- rbind.fill(a, b, c)
+
+
+gmap(lat = 38, lng = -101, zoom = 4, width = 700, height = 600) %>%
+  ly_points(place_lon, place_lat, data = Live.df, alpha = 0.8, color = score, glyph = cand,
+            hover = c(screen_name, score, graph, tweet))%>%
+  tool_box_select() %>%
+  tool_lasso_select()
+
+
+
+testit <- function(x)
+{
+  p1 <- proc.time()
+  Sys.sleep(x)
+  proc.time() - p1 # The cpu usage should be negligible
+}
+testit(5)
+
+z <- z - 1
+print(z)
+if(z > 2) break() 
+
+}
