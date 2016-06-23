@@ -25,7 +25,8 @@ Our sentiment score function is similar to the one designed by [Jeffrey Breen](h
 
 Our data visualization focuses around our three core values: the candidates, the sentiment score of the tweet, and the location of the tweet. 
 
-negative sentiment attributes and polarization. 
+We have provided two ways to visualize this data. First is a bar graph based on total positive sentiment; a simple way to compare all of the candidates together. Second is the location based sentiment analysis (scatter plot). This can get very messy when comparing all candidates so it may be best to examine each candidate separately.  
+
 
 #Future Research
 
