@@ -34,7 +34,7 @@ We have provided two ways to visualize this data. First is a bar graph based on 
 
 ######License
 
-If you distribute this project in part or in full, please attribute with a link to the GitHub page. This software is available under The MIT License, reproduced below.
+If you distribute this project in part or in full, please attribute with a link to the GitHub page. This software is available under The MIT License, reproduced below. Remember to delete collected tweets within the time frames set by the Twitter ToS. Follow the Twitter ToS.
 
 Copyright (c) 2016 Miles Vaughn
 
