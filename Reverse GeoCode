@@ -1,3 +1,5 @@
+#example code for geolocated tweets relating to the Patriots
+
 Pats <- searchTwitter('patriots', geocode='42.375,-71.1061111,10mi')
 
 
