@@ -1,6 +1,6 @@
 #Purpose and Background
 
-###School project by Dagatha Delgado and Miles Vaughn.
+###School project by Miles Vaughn and Dagatha Delgado. 
 
 We wanted to visualize the attitude of Twitter users towards the leading U.S. Presidential nominees. We expect this dataset to grow and to eventually anticipate political outcomes in states as well as cities. 
 
